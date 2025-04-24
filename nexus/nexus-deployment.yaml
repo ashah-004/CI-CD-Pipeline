@@ -18,11 +18,11 @@ spec:
           image: sonatype/nexus3:latest
           resources:
             limits:
-              memory: "768Mi"
-              cpu: "500m"
+              memory: "2Gi"
+              cpu: "1"
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "1Gi"
+              cpu: "1"
           ports:
             - containerPort: 8081
           volumeMounts:
