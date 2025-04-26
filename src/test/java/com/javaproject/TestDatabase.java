@@ -4,15 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
+import com.javaproject.beans.BoardGame;
+import com.javaproject.database.DatabaseAccess;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import com.javaproject.beans.BoardGame;
-import com.javaproject.beans.Review;
-import com.javaproject.database.DatabaseAccess;
-
-@DataJpaTest
+@SpringBootTest(classes = {DatabaseAccess.class})
 class TestDatabase {
 
     @Autowired
