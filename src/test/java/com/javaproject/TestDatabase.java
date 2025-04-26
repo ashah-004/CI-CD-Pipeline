@@ -6,23 +6,17 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.javaproject.beans.BoardGame;
 import com.javaproject.beans.Review;
 import com.javaproject.database.DatabaseAccess;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@DataJpaTest
 class TestDatabase {
 
-    private DatabaseAccess da;
-
     @Autowired
-    public void setDatabase(DatabaseAccess da) {
-        this.da = da;
-    }
+    private DatabaseAccess da;
 
     @Test
     public void testDatabaseAddBoardGame() {
@@ -34,42 +28,9 @@ class TestDatabase {
         boardGame.setGameType("Party Game");
 
         int originalSize = da.getBoardGames().size();
-
         da.addBoardGame(boardGame);
         int newSize = da.getBoardGames().size();
 
-        assertEquals(newSize, originalSize + 1);
+        assertEquals(originalSize + 1, newSize);
     }
-
-    // @Test
-    // public void testDatabaseAddReview() {
-    // List<BoardGame> boardGames = da.getBoardGames();
-    // Long boardgameId = boardGames.get(0).getId();
-
-    // Review review = new Review();
-    // review.setGameId(boardgameId);
-    // review.setText("This is review text");
-
-    // int originalSize = da.getReviews(boardgameId).size();
-
-    // da.addReview(review);
-    // int newSize = da.getReviews(boardgameId).size();
-
-    // assertEquals(newSize, originalSize + 1);
-    // }
-
-    // @Test
-    // public void testDatabaseDeleteReview() {
-    // List<BoardGame> boardGames = da.getBoardGames();
-    // Long boardgameId = boardGames.get(0).getId();
-
-    // List<Review> reviews = da.getReviews(boardgameId);
-    // Long reviewId = reviews.get(0).getId();
-
-    // int originalSize = da.getReviews(boardgameId).size();
-
-    // da.deleteReview(reviewId);
-    // int newSize = da.getReviews(boardgameId).size();
-    // assertEquals(newSize, originalSize - 1);
-    // }
 }
