@@ -13,7 +13,7 @@
 # ref: https://github.com/kubernetes/dns/blob/master/docs/specification.md
 clusterZone: "cluster.local"
 
-master:
+controller:
   httpsKeyStore:
     jenkinsHttpsJksSecretName: ''
     enable: false
@@ -65,9 +65,10 @@ master:
         hYAzODo1Jt59pcqqKJEas0C/lFJEB3frw4ImNx5fNlJYOpx+ijfQs9m39CevDq0=
   # Used for label app.kubernetes.io/component
   componentName: "jenkins-master"
-  image: "jenkins/jenkins"
-  tag: "lts"
-  imagePullPolicy: "Always"
+  image:
+    repository: "jenkins/jenkins"
+    tag: "lts"
+    pullPolicy: "Always"
   imagePullSecretName:
   # Optionally configure lifetime for master-container
   lifecycle:
@@ -84,7 +85,7 @@ master:
   markupFormatter: plainText
   customJenkinsLabels: []
   # configAutoReload requires UseSecurity is set to true:
-  useSecurity: true
+  # useSecurity: true
 
   # enables configuration done directly via XML files
   enableXmlConfig: false
@@ -100,9 +101,10 @@ master:
   # When enabling LDAP or another non-Jenkins identity source, the built-in admin account will no longer exist.
   # If you disable the non-Jenkins identity store and instead use the Jenkins internal one,
   # you should revert master.adminUser to your preferred admin user:
-  adminUser: "admin"
+  # adminUser: "admin"
   # adminPassword: <defaults to random>
   admin:
+    username: "admin"
     existingSecret: ""
     userKey: jenkins-admin-user
     passwordKey: jenkins-admin-password
@@ -171,8 +173,8 @@ master:
   healthProbeReadinessFailureThreshold: 3
   healthProbeLivenessInitialDelay: 90
   healthProbeReadinessInitialDelay: 60
-  slaveListenerPort: 50000
-  slaveHostPort:
+  agentListenerPort: 50000
+  agentHostPort: 
   disabledAgentProtocols:
     - JNLP-connect
     - JNLP2-connect
@@ -187,17 +189,17 @@ master:
   # Note if you set this to 'LoadBalancer', you *must* define annotations to secure it. By default
   # this will be an external load balancer and allowing inbound 0.0.0.0/0, a HUGE
   # security risk:  https://github.com/kubernetes/charts/issues/1341
-  slaveListenerServiceType: "ClusterIP"
+  agentListenerServiceType: "ClusterIP"
   # Optionally assign an IP to the LoadBalancer slaveListenerService LoadBalancer
   # GKE users: only regional static IPs will work for Service Load balancer.
   # slaveListenerLoadBalancerIP: 1.2.3.4
-  slaveListenerServiceAnnotations: {}
+  agentListenerServiceAnnotations: {}
   slaveDefaultsProviderTemplate: ""
-  slaveConnectTimeout: 5
-  slaveReadTimeout: 15
-  slaveKubernetesNamespace:
-  slaveJenkinsUrl:
-  slaveJenkinsTunnel:
+  agentConnectTimeout: 5
+  agentReadTimeout: 15
+  agentKubernetesNamespace:
+  agentJenkinsUrl:
+  agentJenkinsTunnel:
 
   # Example of 'LoadBalancer' type of agent listener with annotations securing it
   # slaveListenerServiceType: LoadBalancer
@@ -226,11 +228,14 @@ master:
   # List of plugins to be install during Jenkins master start
   installPlugins:
     - kubernetes:1.25.7
-    - workflow-job:2.39
+    # Update workflow-job to the version required by workflow-aggregator
+    - workflow-job:1505.vea_4b_20a_4a_495
     - workflow-aggregator:2.6
-    - credentials-binding:1.23
+    # Update credentials-binding to the version required by pipeline-model-definition
+    - credentials-binding:687.v619cb_15e923f
     - git:4.2.2
-    - configuration-as-code:1.41
+    # Update configuration-as-code to the version required by kubernetes, credentials, and git-client
+    - configuration-as-code:1932.v75cb_b_f1b_698d
 
   # List of plugins to install in addition to those listed in master.installPlugins
   additionalPlugins: []
@@ -281,13 +286,13 @@ master:
     configScripts: {}
     # Ignored if securityRealm is defined in master.JCasC.configScripts and
     # ignored if master.enableXmlConfig=true as master.securityRealm takes precedence
-    securityRealm: |-
-      legacy
+    # securityRealm: |-
+    #   legacy
     # Ignored if authorizationStrategy is defined in master.JCasC.configScripts and
     # ignored if master.enableXmlConfig=true as master.authorizationStrategy takes precedence
-    authorizationStrategy: |-
-      loggedInUsersCanDoAnything:
-        allowAnonymousRead: false
+    # authorizationStrategy: |-
+    #   loggedInUsersCanDoAnything:
+    #     allowAnonymousRead: false
     # welcome-message: |
     #   jenkins:
     #     systemMessage: Welcome to our CI\CD server.  This Jenkins is configured and managed 'as code'.
@@ -304,7 +309,9 @@ master:
       # jcasc changes will cause a reboot and will only be applied at the subsequent start-up.  Auto-reload uses the
       # http://<jenkins_url>/reload-configuration-as-code endpoint to reapply config when changes to the configScripts are detected.
       enabled: true
-      image: kiwigrid/k8s-sidecar:0.1.144
+      image:                                   # <--- Now a map
+        repository: "kiwigrid/k8s-sidecar"   # <--- New 'repository' key
+        tag: "0.1.144"      
       imagePullPolicy: IfNotPresent
       resources: {}
         #   limits:
@@ -458,8 +465,9 @@ master:
 
 agent:
   enabled: true
-  image: "jenkins/inbound-agent"
-  tag: "4.3-4"
+  image:
+    repository: "jenkins/inbound-agent"
+    tag:  "latest-jdk17"
   workingDir: "/home/jenkins"
   customJenkinsLabels: []
   # name of the secret to be used for image pulling
@@ -470,11 +478,11 @@ agent:
   runAsGroup:
   resources:
     requests:
-      cpu: "512m"
-      memory: "512Mi"
+      cpu: "1000m"
+      memory: "2048Mi"
     limits:
-      cpu: "512m"
-      memory: "512Mi"
+      cpu: "2000m"
+      memory: "4096Mi"
   # You may want to change this to true while testing a new image
   alwaysPullImage: false
   # Controls how agent pods are retained after the Jenkins build completes
@@ -544,7 +552,7 @@ agent:
   # Defines how the raw yaml field gets merged with yaml definitions from inherited pod templates: merge or override
   yamlMergeStrategy: "override"
   # Timeout in seconds for an agent to be online
-  slaveConnectTimeout: 100
+  connectTimeout: 100
 
   # Below is the implementation of custom pod templates for the default configured kubernetes cloud.
   # Add a key under podTemplates for each pod template. Each key (prior to | character) is just a label, and can be any value.
@@ -604,7 +612,7 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   ##
-  storageClass: jenkins-pv
+  storageClass: standard
   annotations: {}
   accessMode: "ReadWriteOnce"
   size: "8Gi"
@@ -654,52 +662,52 @@ serviceAccountAgent:
 
 ## Backup cronjob configuration
 ## Ref: https://github.com/maorfr/kube-tasks
-backup:
-  # Backup must use RBAC
-  # So by enabling backup you are enabling RBAC specific for backup
-  enabled: false
-  # Used for label app.kubernetes.io/component
-  componentName: "backup"
-  # Schedule to run jobs. Must be in cron time format
-  # Ref: https://crontab.guru/
-  schedule: "0 2 * * *"
-  labels: {}
-  annotations: {}
-    # Example for authorization to AWS S3 using kube2iam
-    # Can also be done using environment variables
-    # iam.amazonaws.com/role: "jenkins"
-  image:
-    repository: "maorfr/kube-tasks"
-    tag: "0.2.0"
-  # Additional arguments for kube-tasks
-  # Ref: https://github.com/maorfr/kube-tasks#simple-backup
-  extraArgs: []
-  # Add existingSecret for AWS credentials
-  existingSecret: {}
-  ## Example for using an existing secret
-   # jenkinsaws:
-  ## Use this key for AWS access key ID
-     # awsaccesskey: jenkins_aws_access_key
-  ## Use this key for AWS secret access key
-     # awssecretkey: jenkins_aws_secret_key
-  # Add additional environment variables
-   # jenkinsgcp:
-  ## Use this key for GCP credentials
-     # gcpcredentials: credentials.json
-  env: []
-  # Example environment variable required for AWS credentials chain
-  # - name: "AWS_REGION"
-  #   value: "us-east-1"
-  resources:
-    requests:
-      memory: 1Gi
-      cpu: 1
-    limits:
-      memory: 1Gi
-      cpu: 1
-  # Destination to store the backup artifacts
-  # Supported cloud storage services: AWS S3, Minio S3, Azure Blob Storage, Google Cloud Storage
-  # Additional support can added. Visit this repository for details
-  # Ref: https://github.com/maorfr/skbn
-  destination: "s3://jenkins-data/backup"
+# backup:
+#   # Backup must use RBAC
+#   # So by enabling backup you are enabling RBAC specific for backup
+#   enabled: false
+#   # Used for label app.kubernetes.io/component
+#   componentName: "backup"
+#   # Schedule to run jobs. Must be in cron time format
+#   # Ref: https://crontab.guru/
+#   schedule: "0 2 * * *"
+#   labels: {}
+#   annotations: {}
+#     # Example for authorization to AWS S3 using kube2iam
+#     # Can also be done using environment variables
+#     # iam.amazonaws.com/role: "jenkins"
+#   image:
+#     repository: "maorfr/kube-tasks"
+#     tag: "0.2.0"
+#   # Additional arguments for kube-tasks
+#   # Ref: https://github.com/maorfr/kube-tasks#simple-backup
+#   extraArgs: []
+#   # Add existingSecret for AWS credentials
+#   existingSecret: {}
+#   ## Example for using an existing secret
+#    # jenkinsaws:
+#   ## Use this key for AWS access key ID
+#      # awsaccesskey: jenkins_aws_access_key
+#   ## Use this key for AWS secret access key
+#      # awssecretkey: jenkins_aws_secret_key
+#   # Add additional environment variables
+#    # jenkinsgcp:
+#   ## Use this key for GCP credentials
+#      # gcpcredentials: credentials.json
+#   env: []
+#   # Example environment variable required for AWS credentials chain
+#   # - name: "AWS_REGION"
+#   #   value: "us-east-1"
+#   resources:
+#     requests:
+#       memory: 1Gi
+#       cpu: 1
+#     limits:
+#       memory: 1Gi
+#       cpu: 1
+#   # Destination to store the backup artifacts
+#   # Supported cloud storage services: AWS S3, Minio S3, Azure Blob Storage, Google Cloud Storage
+#   # Additional support can added. Visit this repository for details
+#   # Ref: https://github.com/maorfr/skbn
+#   destination: "s3://jenkins-data/backup"
 checkDeprecation: true
