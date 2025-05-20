@@ -466,8 +466,8 @@ controller:
 agent:
   enabled: true
   image:
-    repository: "jenkins/inbound-agent"
-    tag:  "latest-jdk17"
+    repository: "akshat1304/jenkins-agent-trivy"
+    tag:  "latest"
   workingDir: "/home/jenkins"
   customJenkinsLabels: []
   # name of the secret to be used for image pulling
@@ -505,6 +505,7 @@ agent:
   # - type: Nfs
   #   mountPath: /var/myapp/mynfs
   #   readOnly: false
+
   #   serverAddress: "192.0.2.0"
   #   serverPath: /var/lib/containers
   # - type: PVC
@@ -540,7 +541,16 @@ agent:
   # Raw yaml template for the Pod. For example this allows usage of toleration for agent pods.
   # https://github.com/jenkinsci/kubernetes-plugin#using-yaml-to-define-pod-templates
   # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  yamlTemplate: ""
+  runAsUser: 0
+  yamlTemplate: |-
+    apiVersion: v1
+    kind: Pod
+    spec:
+      containers:
+      - name: jnlp 
+        command: ["/bin/bash"]
+        args: ["-c", "sleep infinity"] 
+  # yamlTemplate: ""
   # yamlTemplate: |-
   #   apiVersion: v1
   #   kind: Pod
@@ -552,7 +562,7 @@ agent:
   # Defines how the raw yaml field gets merged with yaml definitions from inherited pod templates: merge or override
   yamlMergeStrategy: "override"
   # Timeout in seconds for an agent to be online
-  connectTimeout: 100
+  connectTimeout: 10000
 
   # Below is the implementation of custom pod templates for the default configured kubernetes cloud.
   # Add a key under podTemplates for each pod template. Each key (prior to | character) is just a label, and can be any value.
