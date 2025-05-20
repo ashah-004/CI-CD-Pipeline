@@ -474,8 +474,8 @@ agent:
   imagePullSecretName:
   componentName: "jenkins-slave"
   privileged: false
-  runAsUser:
-  runAsGroup:
+  # runAsUser: 0
+  # runAsGroup:
   resources:
     requests:
       cpu: "1000m"
@@ -541,7 +541,6 @@ agent:
   # Raw yaml template for the Pod. For example this allows usage of toleration for agent pods.
   # https://github.com/jenkinsci/kubernetes-plugin#using-yaml-to-define-pod-templates
   # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  runAsUser: 0
   yamlTemplate: |-
     apiVersion: v1
     kind: Pod
@@ -550,6 +549,9 @@ agent:
       - name: jnlp 
         command: ["/bin/bash"]
         args: ["-c", "sleep infinity"] 
+        securityContext: 
+          runAsUser: 0
+          runAsGroup: 0 
   # yamlTemplate: ""
   # yamlTemplate: |-
   #   apiVersion: v1
