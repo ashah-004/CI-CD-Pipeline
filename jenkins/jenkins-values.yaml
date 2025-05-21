@@ -484,7 +484,7 @@ agent:
       cpu: "2000m"
       memory: "4096Mi"
   # You may want to change this to true while testing a new image
-  alwaysPullImage: false
+  alwaysPullImage: true
   # Controls how agent pods are retained after the Jenkins build completes
   # Possible values: Always, Never, OnFailure
   podRetention: "OnFailure"
