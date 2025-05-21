@@ -13,5 +13,14 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y trivy
 
+# --- ADD THESE LINES TO ENSURE JENKINS USER EXISTS ---
+# These commands will ensure the 'jenkins' group and user exist,
+# and their home directory permissions are correct.
+# '|| true' ensures the command doesn't fail if the user/group already exist.
+RUN groupadd -r jenkins || true && \
+    useradd -r -g jenkins -m -d /home/jenkins -s /bin/bash jenkins || true && \
+    chown -R jenkins:jenkins /home/jenkins
+# --- END ADDITION ---
+
 USER jenkins 
 # Switch back to the jenkins user
