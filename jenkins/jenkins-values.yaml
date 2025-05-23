@@ -473,7 +473,7 @@ agent:
   # name of the secret to be used for image pulling
   imagePullSecretName:
   componentName: "jenkins-slave"
-  privileged: false
+  privileged: true
   # runAsUser: 0
   # runAsGroup:
   resources:
@@ -492,7 +492,13 @@ agent:
   # Allowed types are: ConfigMap, EmptyDir, HostPath, Nfs, PVC, Secret
   # Configure the attributes as they appear in the corresponding Java class for that type
   # https://github.com/jenkinsci/kubernetes-plugin/tree/master/src/main/java/org/csanchez/jenkins/plugins/kubernetes/volumes
-  volumes: []
+  volumes: # <--- ADD THESE VOLUME DEFINITIONS
+    - type: HostPath
+      hostPath: /var/run/docker.sock
+      mountPath: /var/run/docker.sock # This is where the socket is mounted inside the agent container
+      # You might also need to add a "readOnly: false" if the default is true, but for socket it's usually handled correctly.
+  
+  # volumes: []
   # - type: ConfigMap
   #   configMapName: myconfigmap
   #   mountPath: /var/myapp/myconfigmap
@@ -517,7 +523,10 @@ agent:
   #   mountPath: /var/myapp/mysecret
   #   secretName: mysecret
   # Pod-wide ennvironment, these vars are visible to any container in the agent pod
-  envVars: []
+  envVars: # <--- ADD THIS ENVIRONMENT VARIABLE
+    - name: DOCKER_HOST
+      value: "unix:///var/run/docker.sock"
+  # envVars: []
   # - name: PATH
   #   value: /usr/local/bin
   nodeSelector: {}
