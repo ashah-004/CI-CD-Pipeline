@@ -7,7 +7,8 @@ USER root
 # See: https://aquasecurity.github.io/trivy/v0.52/getting-started/installation/
 RUN apt-get update && \
     apt-get install -y wget apt-transport-https gnupg2 && \
-    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /etc/apt/keyrings/trivy-keyring.gpg && \ # Use a specific keyring name
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /etc/apt/keyrings/trivy-keyring.gpg && \ 
+    # Use a specific keyring name
     echo "deb [signed-by=/etc/apt/keyrings/trivy-keyring.gpg] https://aquasecurity.github.io/trivy-repo/deb bookworm main" | tee -a /etc/apt/sources.list.d/trivy.list && \
     apt-get update && \
     apt-get install -y trivy
