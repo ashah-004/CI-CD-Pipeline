@@ -487,7 +487,7 @@ agent:
   alwaysPullImage: true
   # Controls how agent pods are retained after the Jenkins build completes
   # Possible values: Always, Never, OnFailure
-  podRetention: "OnFailure"
+  podRetention: "Never"
   # You can define the volumes that you want to mount for this container
   # Allowed types are: ConfigMap, EmptyDir, HostPath, Nfs, PVC, Secret
   # Configure the attributes as they appear in the corresponding Java class for that type

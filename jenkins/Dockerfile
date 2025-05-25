@@ -14,24 +14,25 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* # Cleanup for Trivy installation in the same RUN instruction
 
 
-# --- DOCKER CLI INSTALLATION & USER PERMISSIONS ---
+# --- DOCKER CLI INSTALLATION ---
 # Install necessary dependencies for Docker CLI, GPG key, repository setup, and Docker CLI packages
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl lsb-release && \
-    # The 'rm -rf' here was the problem. It should be at the end of the entire RUN block.
-    # We will now move the cleanup to the very end of this multi-line RUN command.
     install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
     $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y docker-ce-cli && \
-    rm -rf /var/lib/apt/lists/* # Cleanup for Docker CLI installation and dependencies in the same RUN instruction
+    rm -rf /var/lib/apt/lists/* # Cleanup for Docker CLI installation and dependencies
 
-
-# Add 'jenkins' user to the 'docker' group
-# This is crucial for fixing the "permission denied" error
-RUN groupadd docker || true && usermod -aG docker jenkins
+# --- USER PERMISSIONS ---
+# IMPORTANT: Add 'jenkins' user to the 'docker' group AND the host's docker socket GID (999)
+# Ensure the 'docker' group exists explicitly before trying to add the user to it.
+RUN groupadd docker || true && \
+    groupadd -g 999 dockerhost || true && \
+    usermod -aG dockerhost jenkins && \
+    usermod -aG docker jenkins
 
 # --- END DOCKER CLI & PERMISSIONS ---
 

@@ -14,7 +14,7 @@ spec:
     spec:
       containers: 
         - name: ci-cd-pipeline
-          image: akshat1304/CI-CD-Pipeline:latest # Image that will be used to containers in the cluster
+          image: akshat1304/ci-cd-pipeline:latest # Image that will be used to containers in the cluster
           imagePullPolicy: Always
           ports:
             - containerPort: 8080 # The port that the container is running on in the cluster
