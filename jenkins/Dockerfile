@@ -7,31 +7,27 @@ USER root
 # See: https://aquasecurity.github.io/trivy/v0.52/getting-started/installation/
 RUN apt-get update && \
     apt-get install -y wget apt-transport-https gnupg2 && \
-    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /etc/apt/keyrings/trivy-keyring.gpg && \ 
-    # Use a specific keyring name
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /etc/apt/keyrings/trivy-keyring.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/trivy-keyring.gpg] https://aquasecurity.github.io/trivy-repo/deb bookworm main" | tee -a /etc/apt/sources.list.d/trivy.list && \
     apt-get update && \
-    apt-get install -y trivy
+    apt-get install -y trivy && \
+    rm -rf /var/lib/apt/lists/* # Cleanup for Trivy installation in the same RUN instruction
+
 
 # --- DOCKER CLI INSTALLATION & USER PERMISSIONS ---
-# Install necessary dependencies for Docker CLI
+# Install necessary dependencies for Docker CLI, GPG key, repository setup, and Docker CLI packages
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl lsb-release && \
-    rm -rf /var/lib/apt/lists/*
-
-# Add Docker's official GPG key
-RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-# Set up the Docker repository
-RUN echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Install Docker CLI packages
-RUN apt-get update && \
+    # The 'rm -rf' here was the problem. It should be at the end of the entire RUN block.
+    # We will now move the cleanup to the very end of this multi-line RUN command.
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
     apt-get install -y docker-ce-cli && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* # Cleanup for Docker CLI installation and dependencies in the same RUN instruction
+
 
 # Add 'jenkins' user to the 'docker' group
 # This is crucial for fixing the "permission denied" error
